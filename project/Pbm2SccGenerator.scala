@@ -1,14 +1,19 @@
 import com.google.protobuf.Descriptors.{EnumDescriptor, FileDescriptor}
+import com.google.protobuf.ExtensionRegistry
 import com.google.protobuf.compiler.PluginProtos.{CodeGeneratorRequest, CodeGeneratorResponse}
 
 import scalapb.compiler.{DescriptorPimps, FunctionalPrinter}
 import scala.collection.JavaConverters._
+import scalapb.options.compiler.Scalapb
 
 object Pbm2SccGenerator extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
   override def params = scalapb.compiler.GeneratorParams()
 
   override def run(input: Array[Byte]): Array[Byte] = {
-    val request = CodeGeneratorRequest.parseFrom(input)
+    val registry = ExtensionRegistry.newInstance()
+    Scalapb.registerAllExtensions(registry)
+
+    val request = CodeGeneratorRequest.parseFrom(input, registry)
     val b = CodeGeneratorResponse.newBuilder
 
     val fileDescByName: Map[String, FileDescriptor] =
@@ -47,7 +52,7 @@ object Pbm2SccGenerator extends protocbridge.ProtocCodeGenerator with Descriptor
       .print(fileDesc.getMessageTypes.asScala) {
         case (p, m) =>
           val ps = m.getFields.asScala.map { f =>
-            s"${f.upperScalaName.asSymbol}: ${f.scalaTypeName}"
+            s"${f.scalaName.asSymbol}: ${f.scalaTypeName}"
           }
           p.add(s"final case class ${m.getName}(")
             .indent
