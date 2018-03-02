@@ -1,15 +1,15 @@
 package com.gluegadget.sokkan
 
 import com.gluegadget.sokkan.SokkanOp._
-import hapi.services.tiller.tiller.ReleaseServiceGrpc
+import hapi.services.tiller.tiller.{GetReleaseStatusRequest, ListReleasesRequest, ListReleasesResponse, ReleaseServiceGrpc}
 import hapi.version.version.Version
-import io.grpc.{Channel, ManagedChannelBuilder}
+import io.grpc.{Channel, ManagedChannelBuilder, Metadata}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import cats.{Id, ~>}
 import cats.instances.future._
+import io.grpc.stub.MetadataUtils
 
 object Main extends App {
   def program: ReleaseService[Option[Version]] =
@@ -17,15 +17,29 @@ object Main extends App {
       r <- getVersion()
     } yield r.version
 
+  def program2: ReleaseService[Iterator[ListReleasesResponse]] =
+    for {
+      rs <- lazyList(ListReleasesRequest())
+    } yield rs
+
   def blockingGrpcCompiler: ReleaseServiceA ~> Id =
     new (ReleaseServiceA ~> Id) {
+      val header: Metadata = new Metadata()
+      val key: Metadata.Key[String] = Metadata.Key.of("x-helm-api-client", Metadata.ASCII_STRING_MARSHALLER)
+      header.put(key, "2.8.1")
+
       val channel: Channel = ManagedChannelBuilder.forAddress("localhost", 44134).usePlaintext(true).build
-      val blockingStub = ReleaseServiceGrpc.blockingStub(channel)
+      var blockingStub = ReleaseServiceGrpc.blockingStub(channel)
+      blockingStub = MetadataUtils.attachHeaders(blockingStub, header)
 
       def apply[A](fa: ReleaseServiceA[A]): Id[A] =
         fa match {
           case GetVersion(req) =>
             blockingStub.getVersion(req)
+          case ListReleases(req) =>
+            blockingStub.listReleases(req).toList
+          case LazyListReleases(req) =>
+            blockingStub.listReleases(req)
         }
     }
 
@@ -47,4 +61,7 @@ object Main extends App {
   println(version)
 
   futureVersion onComplete println
+
+  val releases = program2.foldMap(blockingGrpcCompiler)
+  releases.toList.foreach(println)
 }
