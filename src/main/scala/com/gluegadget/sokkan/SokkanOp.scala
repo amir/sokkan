@@ -7,17 +7,16 @@ import hapi.services.tiller.tiller._
 sealed trait ReleaseServiceA[A]
 
 object SokkanOp {
-  case class ListReleases(req: ListReleasesRequest) extends ReleaseServiceA[List[ListReleasesResponse]]
+  case class ListReleases(req: ListReleasesRequest) extends ReleaseServiceA[ListReleasesResponse]
   case class GetVersion(req: GetVersionRequest) extends ReleaseServiceA[GetVersionResponse]
   case class GetStatus(req: GetReleaseStatusRequest) extends ReleaseServiceA[GetReleaseStatusResponse]
 
   type ReleaseService[A] = Free[ReleaseServiceA, A]
 
-  def list(req: ListReleasesRequest): ReleaseService[List[ListReleasesResponse]] =
-    liftF[ReleaseServiceA, List[ListReleasesResponse]](ListReleases(req))
+  def list(req: ListReleasesRequest): ReleaseService[ListReleasesResponse] =
+    liftF[ReleaseServiceA, ListReleasesResponse](ListReleases(req))
 
-  def listAll(): ReleaseService[List[ListReleasesResponse]] =
-    liftF[ReleaseServiceA, List[ListReleasesResponse]](ListReleases(ListReleasesRequest()))
+  def listAll(): ReleaseService[ListReleasesResponse] = list(ListReleasesRequest())
 
   def getStatus(req: GetReleaseStatusRequest): ReleaseService[GetReleaseStatusResponse] =
     liftF[ReleaseServiceA, GetReleaseStatusResponse](GetStatus(req))

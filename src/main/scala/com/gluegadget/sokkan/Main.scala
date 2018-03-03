@@ -14,7 +14,7 @@ import io.grpc.stub.{MetadataUtils, StreamObserver}
 import scala.util.{Failure, Success}
 
 object Main extends App {
-  def program: ReleaseService[List[ListReleasesResponse]] =
+  def program: ReleaseService[ListReleasesResponse] =
     for {
       rs <- listAll()
     } yield rs
@@ -36,14 +36,23 @@ object Main extends App {
           case GetStatus(req) =>
             stub.getReleaseStatus(req)
           case ListReleases(req) =>
-            val releasesPromise: Promise[List[ListReleasesResponse]] = Promise()
+            val releasesPromise: Promise[ListReleasesResponse] = Promise()
             val buffer = scala.collection.mutable.ListBuffer.empty[ListReleasesResponse]
             val listReleasesResponseObserver = new StreamObserver[ListReleasesResponse] {
               override def onNext(value: ListReleasesResponse): Unit = buffer += value
 
               override def onError(t: Throwable): Unit = releasesPromise.failure(t)
 
-              override def onCompleted(): Unit = releasesPromise.success(buffer.toList)
+              override def onCompleted(): Unit = {
+                val all = buffer.foldLeft(ListReleasesResponse()) { (o, p) =>
+                  ListReleasesResponse(
+                    count = p.count,
+                    next = p.next,
+                    total = p.total,
+                    releases = o.releases ++ p.releases)
+                }
+                releasesPromise.success(all)
+              }
             }
             stub.listReleases(req, listReleasesResponseObserver)
             releasesPromise.future
@@ -52,9 +61,7 @@ object Main extends App {
 
   val releases = program.foldMap(grpcCompiler)
   releases onComplete {
-    case Success(s) => s.foreach { rs =>
-      rs.releases.foreach(r => println(r.name))
-    }
+    case Success(s) => s.releases.foreach(r => println(r.name))
     case Failure(e) => println(e)
   }
 
