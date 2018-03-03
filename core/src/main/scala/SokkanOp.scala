@@ -1,4 +1,4 @@
-package com.gluegadget.sokkan
+package sokkan
 
 import cats.free.Free
 import cats.free.Free.liftF
