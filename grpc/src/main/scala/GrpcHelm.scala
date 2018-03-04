@@ -5,7 +5,7 @@ import cats.~>
 import hapi.services.tiller.tiller.{ListReleasesResponse, ReleaseServiceGrpc}
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.grpc.{Channel, ManagedChannelBuilder, Metadata}
-import sokkan.SokkanOp.{GetStatus, GetVersion, ListReleases}
+import sokkan.SokkanOp._
 
 import scala.concurrent.{Future, Promise}
 
@@ -34,8 +34,14 @@ final class GrpcHelmClient(
     fa match {
       case GetVersion(req) =>
         stub.getVersion(req)
-      case GetStatus(req) =>
+      case GetReleaseStatus(req) =>
         stub.getReleaseStatus(req)
+      case GetReleaseContent(req) =>
+        stub.getReleaseContent(req)
+      case UpdateRelease(req) =>
+        stub.updateRelease(req)
+      case InstallRelease(req) =>
+        stub.installRelease(req)
       case ListReleases(req) =>
         val releasesPromise: Promise[ListReleasesResponse] = Promise()
         val buffer = scala.collection.mutable.ListBuffer.empty[ListReleasesResponse]

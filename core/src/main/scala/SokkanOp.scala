@@ -2,14 +2,22 @@ package sokkan
 
 import cats.free.Free
 import cats.free.Free.liftF
+import hapi.release.release.Release
 import hapi.services.tiller.tiller._
 
 sealed trait ReleaseServiceA[A]
 
 object SokkanOp {
   case class ListReleases(req: ListReleasesRequest) extends ReleaseServiceA[ListReleasesResponse]
+  case class GetReleaseStatus(req: GetReleaseStatusRequest) extends ReleaseServiceA[GetReleaseStatusResponse]
+  case class GetReleaseContent(req: GetReleaseContentRequest) extends ReleaseServiceA[GetReleaseContentResponse]
+  case class UpdateRelease(req: UpdateReleaseRequest) extends ReleaseServiceA[UpdateReleaseResponse]
+  case class InstallRelease(req: InstallReleaseRequest) extends ReleaseServiceA[InstallReleaseResponse]
+  case class UninstallRelease(req: UninstallReleaseRequest) extends ReleaseServiceA[UninstallReleaseResponse]
   case class GetVersion(req: GetVersionRequest) extends ReleaseServiceA[GetVersionResponse]
-  case class GetStatus(req: GetReleaseStatusRequest) extends ReleaseServiceA[GetReleaseStatusResponse]
+  case class RollbackRelease(req: RollbackReleaseRequest) extends ReleaseServiceA[RollbackReleaseResponse]
+  case class GetHistory(req: GetHistoryRequest) extends ReleaseServiceA[GetHistoryResponse]
+  case class RunReleaseTest(req: TestReleaseRequest) extends ReleaseServiceA[TestReleaseResponse]
 
   type ReleaseService[A] = Free[ReleaseServiceA, A]
 
@@ -19,8 +27,22 @@ object SokkanOp {
   def listAll(): ReleaseService[ListReleasesResponse] = list(ListReleasesRequest())
 
   def getStatus(req: GetReleaseStatusRequest): ReleaseService[GetReleaseStatusResponse] =
-    liftF[ReleaseServiceA, GetReleaseStatusResponse](GetStatus(req))
+    liftF[ReleaseServiceA, GetReleaseStatusResponse](GetReleaseStatus(req))
+
+  def getContent(req: GetReleaseContentRequest): ReleaseService[GetReleaseContentResponse] =
+    liftF[ReleaseServiceA, GetReleaseContentResponse](GetReleaseContent(req))
+
+  def update(req: UpdateReleaseRequest): ReleaseService[UpdateReleaseResponse] =
+    liftF[ReleaseServiceA, UpdateReleaseResponse](UpdateRelease(req))
+
+  def install(req: InstallReleaseRequest): ReleaseService[InstallReleaseResponse] =
+    liftF[ReleaseServiceA, InstallReleaseResponse](InstallRelease(req))
 
   def getVersion(req: GetVersionRequest = GetVersionRequest()): ReleaseService[GetVersionResponse] =
     liftF[ReleaseServiceA, GetVersionResponse](GetVersion(req))
+
+  def getRelease(name: String, version: Int): ReleaseService[Option[Release]] = for {
+    r <- getContent(GetReleaseContentRequest(name, version))
+  } yield r.release
 }
+
