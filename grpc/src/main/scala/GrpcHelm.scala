@@ -42,6 +42,12 @@ final class GrpcHelmClient(
         stub.updateRelease(req)
       case InstallRelease(req) =>
         stub.installRelease(req)
+      case UninstallRelease(req) =>
+        stub.uninstallRelease(req)
+      case RollbackRelease(req) =>
+        stub.rollbackRelease(req)
+      case GetHistory(req) =>
+        stub.getHistory(req)
       case ListReleases(req) =>
         val releasesPromise: Promise[ListReleasesResponse] = Promise()
         val buffer = scala.collection.mutable.ListBuffer.empty[ListReleasesResponse]
