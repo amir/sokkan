@@ -4,7 +4,9 @@ libraryDependencies ++= Seq(
   "com.google.protobuf" % "protobuf-java" % "3.5.1",
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion,
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
-  "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+  "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
+
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
 
 PB.targets in Compile := Seq(
