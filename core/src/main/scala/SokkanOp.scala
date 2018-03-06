@@ -17,7 +17,7 @@ object SokkanOp {
   case class GetVersion(req: GetVersionRequest) extends ReleaseServiceA[GetVersionResponse]
   case class RollbackRelease(req: RollbackReleaseRequest) extends ReleaseServiceA[RollbackReleaseResponse]
   case class GetHistory(req: GetHistoryRequest) extends ReleaseServiceA[GetHistoryResponse]
-  case class RunReleaseTest(req: TestReleaseRequest) extends ReleaseServiceA[TestReleaseResponse]
+  case class RunReleaseTest(req: TestReleaseRequest) extends ReleaseServiceA[List[TestReleaseResponse]]
 
   type ReleaseService[A] = Free[ReleaseServiceA, A]
 
@@ -40,6 +40,9 @@ object SokkanOp {
 
   def getVersion(req: GetVersionRequest = GetVersionRequest()): ReleaseService[GetVersionResponse] =
     liftF[ReleaseServiceA, GetVersionResponse](GetVersion(req))
+
+  def testRelease(req: TestReleaseRequest): ReleaseService[List[TestReleaseResponse]] =
+    liftF[ReleaseServiceA, List[TestReleaseResponse]](RunReleaseTest(req))
 
   def getRelease(name: String, version: Int): ReleaseService[Option[Release]] = for {
     r <- getContent(GetReleaseContentRequest(name, version))

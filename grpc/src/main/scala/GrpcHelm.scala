@@ -2,7 +2,7 @@ package sokkan
 package grpc
 
 import cats.~>
-import hapi.services.tiller.tiller.{ListReleasesResponse, ReleaseServiceGrpc}
+import hapi.services.tiller.tiller.{ListReleasesResponse, ReleaseServiceGrpc, TestReleaseResponse}
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.grpc.{Channel, ManagedChannelBuilder, Metadata}
 import sokkan.SokkanOp._
@@ -70,5 +70,18 @@ final class GrpcHelmClient(
         }
         stub.listReleases(req, observer)
         releasesPromise.future
+
+      case RunReleaseTest(req) =>
+        val testPromise: Promise[List[TestReleaseResponse]] = Promise()
+        val buffer = scala.collection.mutable.ListBuffer.empty[TestReleaseResponse]
+        val observer = new StreamObserver[TestReleaseResponse] {
+          override def onNext(value: TestReleaseResponse): Unit = buffer += value
+
+          override def onError(t: Throwable): Unit = testPromise.failure(t)
+
+          override def onCompleted(): Unit = testPromise.success(buffer.toList)
+        }
+        stub.runReleaseTest(req, observer)
+        testPromise.future
     }
 }
