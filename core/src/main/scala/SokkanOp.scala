@@ -55,6 +55,9 @@ object SokkanOp {
 
     def getVersion(req: GetVersionRequest = GetVersionRequest()): Free[F, GetVersionResponse] =
       Free.inject[ReleaseServiceA, F](GetVersion(req))
+
+    def install(req: InstallReleaseRequest): Free[F, InstallReleaseResponse] =
+      Free.inject[ReleaseServiceA, F](InstallRelease(req))
   }
 
   object ReleaseServiceI {
