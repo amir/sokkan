@@ -1,5 +1,6 @@
 package sokkan
 
+import cats.InjectK
 import cats.free.Free
 import cats.free.Free.liftF
 import hapi.release.release.Release
@@ -47,5 +48,17 @@ object SokkanOp {
   def getRelease(name: String, version: Int): ReleaseService[Option[Release]] = for {
     r <- getContent(GetReleaseContentRequest(name, version))
   } yield r.release
+
+  class ReleaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]) {
+    def list(req: ListReleasesRequest): Free[F, ListReleasesResponse] =
+      Free.inject[ReleaseServiceA, F](ListReleases(req))
+
+    def getVersion(req: GetVersionRequest = GetVersionRequest()): Free[F, GetVersionResponse] =
+      Free.inject[ReleaseServiceA, F](GetVersion(req))
+  }
+
+  object ReleaseServiceI {
+    implicit def releaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]): ReleaseServiceI[F] = new ReleaseServiceI[F]
+  }
 }
 

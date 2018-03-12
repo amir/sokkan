@@ -4,6 +4,7 @@ package skuber
 import cats.free.Free
 import cats.free.Free.liftF
 import _root_.skuber.{ObjectResource, ResourceDefinition}
+import cats.InjectK
 import play.api.libs.json.Format
 
 sealed abstract class KubernetesOp[A] extends Product with Serializable
@@ -22,4 +23,13 @@ object KubernetesOp {
 
   def get[T <: ObjectResource](name: String)(implicit fmt: Format[T], rd: ResourceDefinition[T]): SkuberOpF[T] =
     liftF[KubernetesOp, T](GetObjectResource[T](name, fmt, rd))
+
+  class KubernetesI[F[_]](implicit I: InjectK[KubernetesOp, F]) {
+    def get[T <: ObjectResource](name: String)(implicit fmt: Format[T], rd: ResourceDefinition[T]) =
+      Free.inject[KubernetesOp, F](GetObjectResource[T](name, fmt, rd))
+  }
+
+  object KubernetesI {
+    implicit def kubernetesI[F[_]](implicit I: InjectK[KubernetesOp, F]): KubernetesI[F] = new KubernetesI[F]
+  }
 }
