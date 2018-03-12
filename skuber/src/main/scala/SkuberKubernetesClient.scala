@@ -1,37 +1,29 @@
-import SkuberKubernetesClient.Result
 import sokkan.skuber.KubernetesOp
 import cats.~>
-import sokkan.skuber.KubernetesOp.GetObjectResource
+import sokkan.skuber.KubernetesOp.{GetObjectResource, RestrictedFunctionK}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import _root_.skuber._
-import cats.data.ReaderT
-import play.api.libs.json.Format
 
 class SkuberKubernetesClient(implicit system: ActorSystem,
                              materializer: ActorMaterializer,
                              dispatcher: ExecutionContextExecutor)
-  extends (KubernetesOp ~> Result) {
+  extends (KubernetesOp ~> Future) {
 
   val k8s = k8sInit
 
-  def apply[A](fa: KubernetesOp[A]): Result[A] = {
+  def apply[A](fa: KubernetesOp[A]): Future[A] = {
     fa match {
-      case GetObjectResource(name: String) =>
-        ReaderT {
-          case (format, definition) =>
-            k8s.get(name)(format, definition): Future[A]
+      case g: GetObjectResource[A] => {
+        val f = new RestrictedFunctionK[ObjectResource, GetObjectResource, Future] {
+          def apply[X <: ObjectResource](g: GetObjectResource[X]): Future[X] =
+            k8s.get(g.name)(g.fmt, g.rd)
         }
+        g.accept(f)
+      }
     }
   }
 }
 
-object SkuberKubernetesClient {
-  type Result[A] = ReaderT[
-    Future,
-    (Format[A with ObjectResource], ResourceDefinition[A with ObjectResource]),
-    A,
-    ]
-}

@@ -6,4 +6,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % "10.0.10"
 )
 
-scalacOptions += "-Ypartial-unification"
+scalacOptions ++= Seq(
+  "-Ypartial-unification",
+  "-language:higherKinds"
+)
