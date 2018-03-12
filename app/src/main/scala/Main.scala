@@ -51,10 +51,10 @@ object Main extends App {
     } yield cm
   }
 
-  val interpreter1 = new GrpcHelmClient("localhost", 44134, Some("2.8.1"))
-  val interpreter2 = new SkuberKubernetesClient()
+  val helm = new GrpcHelmClient("localhost", 44134, Some("2.8.1"))
+  val kubernetes = new SkuberKubernetesClient()
 
-  val interpreter: App ~> Future = interpreter1 or interpreter2
+  val interpreter: App ~> Future = helm or kubernetes
 
   val evaled = program.foldMap(interpreter)
 
