@@ -28,3 +28,5 @@ val interpreter = new GrpcHelmClient("localhost", 44134, Some("2.8.1"))
 
 sokkan.run(interpreter, v).onComplete(println)
 ```
+
+See [app](app/src/main/scala/Main.scala) for a composition of Helm and Kubernetes Free monads ADTs.
