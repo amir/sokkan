@@ -56,7 +56,5 @@ object Main extends App {
 
   val interpreter: App ~> Future = helm or kubernetes
 
-  val evaled = program.foldMap(interpreter)
-
-  evaled.onComplete(println)
+  program.foldMap(interpreter).onComplete(println)
 }
