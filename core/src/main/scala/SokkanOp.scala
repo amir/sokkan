@@ -39,6 +39,9 @@ object SokkanOp {
   def install(req: InstallReleaseRequest): ReleaseService[InstallReleaseResponse] =
     liftF[ReleaseServiceA, InstallReleaseResponse](InstallRelease(req))
 
+  def uninstall(req: UninstallReleaseRequest): ReleaseService[UninstallReleaseResponse] =
+    liftF[ReleaseServiceA, UninstallReleaseResponse](UninstallRelease(req))
+
   def getVersion(req: GetVersionRequest = GetVersionRequest()): ReleaseService[GetVersionResponse] =
     liftF[ReleaseServiceA, GetVersionResponse](GetVersion(req))
 
@@ -58,6 +61,9 @@ object SokkanOp {
 
     def install(req: InstallReleaseRequest): Free[F, InstallReleaseResponse] =
       Free.inject[ReleaseServiceA, F](InstallRelease(req))
+
+    def uninstall(req: UninstallReleaseRequest): Free[F, UninstallReleaseResponse] =
+      Free.inject[ReleaseServiceA, F](UninstallRelease(req))
   }
 
   object ReleaseServiceI {

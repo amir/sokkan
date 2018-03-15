@@ -17,7 +17,7 @@ import com.google.protobuf.ByteString
 import hapi.chart.chart.Chart
 import hapi.chart.metadata.Metadata
 import hapi.chart.template.Template
-import hapi.services.tiller.tiller.InstallReleaseRequest
+import hapi.services.tiller.tiller.{InstallReleaseRequest, UninstallReleaseRequest}
 
 import scala.concurrent.Future
 
@@ -45,9 +45,12 @@ object Main extends App {
     val template = new Template(data = ByteString.copyFrom(configMap.getBytes))
     val chart = new Chart(metadata = Some(metadata), templates = Seq(template))
 
+    val releaseName = "test"
+
     for {
-      _ <- install(InstallReleaseRequest(name = "test", namespace = "default", chart = Some(chart)))
+      _ <- install(InstallReleaseRequest(name = releaseName, namespace = "default", chart = Some(chart)))
       cm <- get[ConfigMap]("mychart-configmap")
+      _ <- uninstall(UninstallReleaseRequest(name = releaseName, purge = true))
     } yield cm
   }
 
