@@ -7,6 +7,7 @@ import sokkan.ReleaseServiceA
 import sokkan.SokkanOp.ReleaseServiceI
 import sokkan.skuber.KubernetesOp
 import sokkan.skuber.KubernetesOp.KubernetesI
+import _root_.skuber.k8sInit
 import _root_.skuber.json.format.configMapFmt
 import cats.~>
 import sokkan.grpc.GrpcHelmClient
@@ -26,6 +27,7 @@ object Main extends App {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
+  val k8s = k8sInit
 
   def program(implicit R: ReleaseServiceI[App], K: KubernetesI[App]): Free[App, ConfigMap] = {
     import R._, K._
@@ -50,7 +52,7 @@ object Main extends App {
   }
 
   val helm = new GrpcHelmClient("localhost", 44134, Some("2.8.1"))
-  val kubernetes = new SkuberKubernetesClient()
+  val kubernetes = new SkuberKubernetesClient(k8s)
 
   val interpreter: App ~> Future = helm or kubernetes
 
