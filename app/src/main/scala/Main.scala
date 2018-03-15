@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cats.data.EitherK
 import cats.free.Free
-import skuber.ConfigMap
+import _root_.skuber.{ConfigMap, ObjectMeta}
 import sokkan.ReleaseServiceA
 import sokkan.SokkanOp.ReleaseServiceI
 import sokkan.skuber.KubernetesOp
@@ -13,7 +13,6 @@ import sokkan.grpc.GrpcHelmClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import cats.instances.future._
-import com.google.protobuf.ByteString
 import hapi.chart.chart.Chart
 import hapi.chart.metadata.Metadata
 import hapi.chart.template.Template
@@ -30,19 +29,15 @@ object Main extends App {
 
   def program(implicit R: ReleaseServiceI[App], K: KubernetesI[App]): Free[App, ConfigMap] = {
     import R._, K._
+    import YamlObjectResource._
 
-    val configMap =
-      """
-        |apiVersion: v1
-        |kind: ConfigMap
-        |metadata:
-        |  name: mychart-configmap
-        |data:
-        |  myvalue: "Hello World"
-      """.stripMargin
+    val cm: ConfigMap = ConfigMap(
+      metadata = ObjectMeta(name = "mychart-configmap"),
+      data = Map("myvalue" -> "Hello World"))
+    val configMap = cm.toYamlByteString
 
     val metadata = new Metadata(tillerVersion = "2.8.1")
-    val template = new Template(data = ByteString.copyFrom(configMap.getBytes))
+    val template = new Template(data = configMap)
     val chart = new Chart(metadata = Some(metadata), templates = Seq(template))
 
     val releaseName = "test"
