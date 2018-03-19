@@ -38,9 +38,9 @@ object Main extends App {
       data = Map("myvalue" -> "Hello World"))
     val configMap = cm.toYamlByteString
 
-    val metadata = new Metadata(tillerVersion = "2.8.1")
-    val template = new Template(data = configMap)
-    val chart = new Chart(metadata = Some(metadata), templates = Seq(template))
+    val metadata = Metadata(tillerVersion = "2.8.1")
+    val template = Template(data = configMap)
+    val chart = Chart(metadata = Some(metadata), templates = Seq(template))
 
     val releaseName = "test"
 
