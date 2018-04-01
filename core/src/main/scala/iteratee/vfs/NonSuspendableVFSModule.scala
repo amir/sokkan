@@ -1,11 +1,11 @@
 package sokkan.iteratee.vfs
 
-import java.io.{BufferedReader, Closeable, InputStreamReader}
+import java.io.{BufferedReader, Closeable, InputStream, InputStreamReader}
 
 import cats.{Eval, MonadError}
 import io.iteratee.internal.Step
 import io.iteratee.{Enumerator, Module}
-import org.apache.commons.vfs2.{FileContent, FileObject}
+import org.apache.commons.vfs2.{FileContent, FileObject, VFS}
 
 trait NonSuspendableVFSModule[F[_]] extends VFSModule[F] {
   this: Module[F] { type M[f[_]] <: MonadError[f, Throwable] } =>
@@ -17,11 +17,25 @@ trait NonSuspendableVFSModule[F[_]] extends VFSModule[F] {
   private[this] def newBufferedReader(content: FileContent): F[BufferedReader] =
     F.catchNonFatal(new BufferedReader(new InputStreamReader(content.getInputStream, "UTF-8")))
 
+  private[this] def newInputStream(content: FileContent): F[InputStream] = F.catchNonFatal(content.getInputStream)
+
   final def readLines(file: FileObject): Enumerator[F, String] = Enumerator.liftMEval(
     Eval.always(
       bracket(newFileContent(file))(newBufferedReader)(F)
     )
   )(F).flatMap(reader => new LineEnumerator(reader).ensureEval(close(reader))(F))(F)
+
+  final def inputStream(file: FileObject): Enumerator[F, (FileObject, InputStream)] =
+    Enumerator.liftMEval(
+      Eval.always(
+        bracket(newFileContent(file))(newInputStream)(F)
+      )
+    )(F).map(f => (file, f))(F)
+
+  final def readFileObjectStreams(name: String): Enumerator[F, (FileObject, InputStream)] =
+    Enumerator.liftMEval(captureEffect(VFS.getManager.resolveFile(name)))(F)
+      .flatMap(listFilesRec)(F)
+      .flatMap(inputStream)(F)
 
   final def listFiles(dir: FileObject): Enumerator[F, FileObject] =
     Enumerator.liftMEval(captureEffect(dir.getChildren))(F).flatMap {

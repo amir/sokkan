@@ -1,6 +1,6 @@
 package sokkan.iteratee.vfs
 
-import java.io.Closeable
+import java.io.{Closeable, InputStream}
 
 import cats.MonadError
 import io.iteratee.Enumerator
@@ -12,6 +12,7 @@ trait VFSModule[F[_]] {
   def readLines(file: FileObject): Enumerator[F, String]
   def listFiles(file: FileObject): Enumerator[F, FileObject]
   def listFilesRec(file: FileObject): Enumerator[F, FileObject]
+  def readFileObjectStreams(name: String): Enumerator[F, (FileObject, InputStream)]
 
   protected final def bracket[R <: Closeable, A](fr: F[R])(f: R => F[A])(implicit F: MonadError[F, Throwable]): F[A] =
     F.flatMap(fr) { r =>
