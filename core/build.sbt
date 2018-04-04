@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-compress" % "1.14",
   "commons-httpclient" % "commons-httpclient" % "3.1",
   "org.yaml" % "snakeyaml" % "1.19",
+  "org.kamranzafar" % "jtar" % "2.3",
 
   "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 )
