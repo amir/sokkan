@@ -1,8 +1,11 @@
 package sokkan
 
+import java.io.File
+
 import cats.InjectK
 import cats.free.Free
 import cats.free.Free.liftF
+import hapi.chart.chart.Chart
 import hapi.release.release.Release
 import hapi.services.tiller.tiller._
 
@@ -19,6 +22,7 @@ object SokkanOp {
   case class RollbackRelease(req: RollbackReleaseRequest) extends ReleaseServiceA[RollbackReleaseResponse]
   case class GetHistory(req: GetHistoryRequest) extends ReleaseServiceA[GetHistoryResponse]
   case class RunReleaseTest(req: TestReleaseRequest) extends ReleaseServiceA[List[TestReleaseResponse]]
+  case class GetChartFromTapeArchive(file: File) extends ReleaseServiceA[Option[Chart]]
 
   type ReleaseService[A] = Free[ReleaseServiceA, A]
 
@@ -51,6 +55,9 @@ object SokkanOp {
   def getRelease(name: String, version: Int): ReleaseService[Option[Release]] = for {
     r <- getContent(GetReleaseContentRequest(name, version))
   } yield r.release
+
+  def chartFromTapeArchive(file: File): ReleaseService[Option[Chart]] =
+    liftF[ReleaseServiceA, Option[Chart]](GetChartFromTapeArchive(file))
 
   class ReleaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]) {
     def list(req: ListReleasesRequest): Free[F, ListReleasesResponse] =

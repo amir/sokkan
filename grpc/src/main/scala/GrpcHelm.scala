@@ -5,19 +5,22 @@ import cats.~>
 import hapi.services.tiller.tiller.{ListReleasesResponse, ReleaseServiceGrpc, TestReleaseResponse}
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.grpc.{Channel, ManagedChannelBuilder, Metadata}
+import io.iteratee.modules.FutureModule
 import sokkan.SokkanOp._
+import sokkan.iteratee.chart.ChartModule
+import sokkan.iteratee.tar.NonSuspendableTapeArchiveModule
+import cats.instances.future._
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 final class GrpcHelmClient(
                             host: String,
                             port: Int,
-                            helmApiClientVersion: Option[String])
+                            helmApiClientVersion: Option[String])(implicit ec: ExecutionContext)
   extends (ReleaseServiceA ~> Future) {
 
   private val channel: Channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build
-  private val stub = helmApiClientVersion match {
-    case Some(v) =>
+  private val stub = helmApiClientVersion.fold(ReleaseServiceGrpc.stub(channel)) { v =>
       val header: Metadata = new Metadata()
       val key: Metadata.Key[String] = Metadata.Key.of("x-helm-api-client", Metadata.ASCII_STRING_MARSHALLER)
       header.put(key, v)
@@ -25,9 +28,11 @@ final class GrpcHelmClient(
       stub = MetadataUtils.attachHeaders(stub, header)
 
       stub
+  }
 
-    case None =>
-      ReleaseServiceGrpc.stub(channel)
+  trait FutureChartModule extends FutureModule with NonSuspendableTapeArchiveModule[Future] with ChartModule[Future]
+  def futureCharts(implicit ec0: ExecutionContext) = new FutureChartModule {
+    override protected def ec: ExecutionContext = ec0
   }
 
   def apply[A](fa: ReleaseServiceA[A]): Future[A] =
@@ -83,5 +88,13 @@ final class GrpcHelmClient(
         }
         stub.runReleaseTest(req, observer)
         testPromise.future
+
+      case GetChartFromTapeArchive(file) =>
+        futureCharts.chartFromFiles(futureCharts.readTapeArchiveStreams(file)).run.map { s =>
+          s.get(RootChart).map { rootChart =>
+            val deps = (s - RootChart).values.toList
+            rootChart.copy(dependencies = deps)
+          }
+        }
     }
 }
