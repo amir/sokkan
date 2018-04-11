@@ -4,7 +4,8 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-effect" % "0.9",
   "io.skuber" %% "skuber" % "2.0.4",
   "com.typesafe.akka" %% "akka-http" % "10.0.10",
-  "net.jcazevedo" %% "moultingyaml" % "0.4.0"
+  "net.jcazevedo" %% "moultingyaml" % "0.4.0",
+  "org.kamranzafar" % "jtar" % "2.3"
 )
 
 scalacOptions ++= Seq(

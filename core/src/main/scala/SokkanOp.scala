@@ -1,6 +1,7 @@
 package sokkan
 
 import java.io.File
+import java.net.URL
 
 import cats.InjectK
 import cats.free.Free
@@ -23,6 +24,7 @@ object SokkanOp {
   case class GetHistory(req: GetHistoryRequest) extends ReleaseServiceA[GetHistoryResponse]
   case class RunReleaseTest(req: TestReleaseRequest) extends ReleaseServiceA[List[TestReleaseResponse]]
   case class GetChartFromTapeArchive(file: File) extends ReleaseServiceA[Option[Chart]]
+  case class GetChartFromTapeArchiveUrl(url: URL) extends ReleaseServiceA[Option[Chart]]
 
   type ReleaseService[A] = Free[ReleaseServiceA, A]
 
@@ -59,6 +61,9 @@ object SokkanOp {
   def chartFromTapeArchive(file: File): ReleaseService[Option[Chart]] =
     liftF[ReleaseServiceA, Option[Chart]](GetChartFromTapeArchive(file))
 
+  def chartFromTapeArchiveUrl(url: URL): ReleaseService[Option[Chart]] =
+    liftF[ReleaseServiceA, Option[Chart]](GetChartFromTapeArchiveUrl(url))
+
   class ReleaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]) {
     def list(req: ListReleasesRequest): Free[F, ListReleasesResponse] =
       Free.inject[ReleaseServiceA, F](ListReleases(req))
@@ -71,6 +76,9 @@ object SokkanOp {
 
     def uninstall(req: UninstallReleaseRequest): Free[F, UninstallReleaseResponse] =
       Free.inject[ReleaseServiceA, F](UninstallRelease(req))
+
+    def chartFromTapeArchiveUrl(url: URL): Free[F, Option[Chart]] =
+      Free.inject[ReleaseServiceA, F](GetChartFromTapeArchiveUrl(url))
   }
 
   object ReleaseServiceI {

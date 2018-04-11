@@ -96,5 +96,15 @@ final class GrpcHelmClient(
             rootChart.copy(dependencies = deps)
           }
         }
+
+      case GetChartFromTapeArchiveUrl(url) =>
+        futureCharts.chartFromFiles(futureCharts.readTapeArchiveStreamsFromUrl(url)).run.map { s =>
+          s.get(RootChart).map { rootChart =>
+            val deps = (s - RootChart).values.toList
+            rootChart.copy(dependencies = deps)
+          }
+        }
+
+
     }
 }

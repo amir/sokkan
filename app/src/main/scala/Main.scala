@@ -1,8 +1,10 @@
+import java.net.URL
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cats.data.EitherK
 import cats.free.Free
-import _root_.skuber.{ConfigMap, ObjectMeta}
+import _root_.skuber.ConfigMap
 import sokkan.ReleaseServiceA
 import sokkan.SokkanOp.ReleaseServiceI
 import sokkan.skuber.KubernetesOp
@@ -14,9 +16,7 @@ import sokkan.grpc.GrpcHelmClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import cats.instances.future._
-import hapi.chart.chart.Chart
-import hapi.chart.metadata.Metadata
-import hapi.chart.template.Template
+import hapi.chart.config.Config
 import hapi.services.tiller.tiller.{InstallReleaseRequest, UninstallReleaseRequest}
 
 import scala.concurrent.Future
@@ -31,27 +31,19 @@ object Main extends App {
 
   def program(implicit R: ReleaseServiceI[App], K: KubernetesI[App]): Free[App, ConfigMap] = {
     import R._, K._
-    import YamlObjectResource._
-
-    val cm: ConfigMap = ConfigMap(
-      metadata = ObjectMeta(name = "mychart-configmap"),
-      data = Map("myvalue" -> "Hello World"))
-    val configMap = cm.toYamlByteString
-
-    val metadata = Metadata(tillerVersion = "2.8.1")
-    val template = Template(data = configMap)
-    val chart = Chart(metadata = Some(metadata), templates = Seq(template))
 
     val releaseName = "test"
+    val chartUrl = new URL("https://kubernetes-charts.storage.googleapis.com/wordpress-0.8.7.tgz")
 
     for {
-      _ <- install(InstallReleaseRequest(name = releaseName, namespace = "default", chart = Some(chart)))
-      cm <- get[ConfigMap]("mychart-configmap")
+      chart <- chartFromTapeArchiveUrl(chartUrl)
+      _ <- install(InstallReleaseRequest(name = releaseName, values = Some(Config()), namespace = "default", chart = chart))
+      cm <- get[ConfigMap](s"$releaseName-mariadb")
       _ <- uninstall(UninstallReleaseRequest(name = releaseName, purge = true))
     } yield cm
   }
 
-  val helm = new GrpcHelmClient("localhost", 44134, Some("2.8.1"))
+  val helm = new GrpcHelmClient("localhost", 44134, Some("2.8.2"))
   val kubernetes = new SkuberKubernetesClient(k8s)
 
   val interpreter: App ~> Future = helm or kubernetes

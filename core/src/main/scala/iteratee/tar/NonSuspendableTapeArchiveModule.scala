@@ -1,6 +1,7 @@
 package sokkan.iteratee.tar
 
 import java.io._
+import java.net.URL
 import java.util.zip.GZIPInputStream
 
 import cats.{Eval, MonadError}
@@ -19,6 +20,12 @@ trait NonSuspendableTapeArchiveModule[F[_]] extends TapeArchiveModule[F] {
     Enumerator.liftMEval(captureEffect(new TarInputStream(new GZIPInputStream(new FileInputStream(file)))))(F).flatMap { ti =>
       new TapeArchiveEnumerator(ti).ensureEval(close(ti))(F)
     }(F)
+
+  override final def readTapeArchiveStreamsFromUrl(url: URL): Enumerator[F, (String, InputStream)] =
+    Enumerator.liftMEval(captureEffect(new TarInputStream(new GZIPInputStream(url.openStream()))))(F).flatMap { ti =>
+      new TapeArchiveEnumerator(ti).ensureEval(close(ti))(F)
+    }(F)
+
 
   final class TapeArchiveEnumerator(ti: TarInputStream) extends Enumerator[F, (String, InputStream)] {
     final def apply[A](s: Step[F, (String, InputStream), A]): F[Step[F, (String, InputStream), A]] =
