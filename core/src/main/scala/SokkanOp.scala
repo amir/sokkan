@@ -1,14 +1,13 @@
 package sokkan
 
-import java.io.File
-import java.net.URL
-
 import cats.InjectK
 import cats.free.Free
 import cats.free.Free.liftF
 import hapi.chart.chart.Chart
 import hapi.release.release.Release
 import hapi.services.tiller.tiller._
+import java.io.File
+import java.net.URL
 
 sealed trait ReleaseServiceA[A]
 
@@ -82,7 +81,8 @@ object SokkanOp {
   }
 
   object ReleaseServiceI {
-    implicit def releaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]): ReleaseServiceI[F] = new ReleaseServiceI[F]
+    implicit def releaseServiceI[F[_]](implicit I: InjectK[ReleaseServiceA, F]): ReleaseServiceI[F] =
+      new ReleaseServiceI[F]
   }
 }
 

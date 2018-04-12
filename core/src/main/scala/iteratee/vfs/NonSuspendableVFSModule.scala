@@ -1,10 +1,9 @@
 package sokkan.iteratee.vfs
 
-import java.io.{BufferedReader, Closeable, InputStream, InputStreamReader}
-
 import cats.{Eval, MonadError}
-import io.iteratee.internal.Step
 import io.iteratee.{Enumerator, Module}
+import io.iteratee.internal.Step
+import java.io.{BufferedReader, Closeable, InputStream, InputStreamReader}
 import org.apache.commons.vfs2.{FileContent, FileObject, VFS}
 
 trait NonSuspendableVFSModule[F[_]] extends VFSModule[F] {

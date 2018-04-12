@@ -1,9 +1,8 @@
 package sokkan.iteratee.tar
 
+import io.iteratee.Enumerator
 import java.io.{File, InputStream}
 import java.net.URL
-
-import io.iteratee.Enumerator
 
 trait TapeArchiveModule[F[_]] {
   def readTapeArchiveStreams(file: File): Enumerator[F, (String, InputStream)]

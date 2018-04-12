@@ -1,12 +1,11 @@
 package sokkan.iteratee.tar
 
-import java.io._
-import java.net.URL
-import java.util.zip.GZIPInputStream
-
 import cats.{Eval, MonadError}
 import io.iteratee.{Enumerator, Module}
 import io.iteratee.internal.Step
+import java.io._
+import java.net.URL
+import java.util.zip.GZIPInputStream
 import org.kamranzafar.jtar.TarInputStream
 
 trait NonSuspendableTapeArchiveModule[F[_]] extends TapeArchiveModule[F] {
@@ -17,7 +16,9 @@ trait NonSuspendableTapeArchiveModule[F[_]] extends TapeArchiveModule[F] {
   def close(c: Closeable): Eval[F[Unit]] = Eval.later(F.catchNonFatal(c.close()))
 
   override final def readTapeArchiveStreams(file: File): Enumerator[F, (String, InputStream)] =
-    Enumerator.liftMEval(captureEffect(new TarInputStream(new GZIPInputStream(new FileInputStream(file)))))(F).flatMap { ti =>
+    Enumerator.liftMEval(
+      captureEffect(new TarInputStream(new GZIPInputStream(new FileInputStream(file))))
+    )(F).flatMap { ti =>
       new TapeArchiveEnumerator(ti).ensureEval(close(ti))(F)
     }(F)
 

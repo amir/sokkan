@@ -1,10 +1,10 @@
 package sokkan
 package skuber
 
-import cats.free.Free
-import cats.free.Free.liftF
 import _root_.skuber.{ObjectResource, ResourceDefinition}
 import cats.InjectK
+import cats.free.Free
+import cats.free.Free.liftF
 import play.api.libs.json.Format
 
 sealed abstract class KubernetesOp[A] extends Product with Serializable
@@ -15,7 +15,8 @@ object KubernetesOp {
     def apply[A <: R](fa: F[A]): G[A]
   }
 
-  final case class GetObjectResource[T <: ObjectResource](name: String, fmt: Format[T], rd: ResourceDefinition[T]) extends KubernetesOp[T] {
+  final case class GetObjectResource[T <: ObjectResource](name: String, fmt: Format[T], rd: ResourceDefinition[T])
+    extends KubernetesOp[T] {
     def accept[G[_]](f: RestrictedFunctionK[ObjectResource, GetObjectResource, G]): G[T] = f(this)
   }
 
@@ -25,7 +26,7 @@ object KubernetesOp {
     liftF[KubernetesOp, T](GetObjectResource[T](name, fmt, rd))
 
   class KubernetesI[F[_]](implicit I: InjectK[KubernetesOp, F]) {
-    def get[T <: ObjectResource](name: String)(implicit fmt: Format[T], rd: ResourceDefinition[T]) =
+    def get[T <: ObjectResource](name: String)(implicit fmt: Format[T], rd: ResourceDefinition[T]): Free[F, T] =
       Free.inject[KubernetesOp, F](GetObjectResource[T](name, fmt, rd))
   }
 

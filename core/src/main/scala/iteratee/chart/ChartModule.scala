@@ -1,8 +1,6 @@
 package sokkan
 package iteratee.chart
 
-import java.io.{InputStream, InputStreamReader}
-
 import cats.MonadError
 import cats.syntax.either._
 import com.google.protobuf.ByteString
@@ -11,10 +9,11 @@ import hapi.chart.chart.Chart
 import hapi.chart.config.Config
 import hapi.chart.metadata.Metadata
 import hapi.chart.template.Template
-import io.iteratee.{Iteratee, Module}
-import io.circe.yaml
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
+import io.circe.yaml
+import io.iteratee.{Iteratee, Module}
+import java.io.{InputStream, InputStreamReader}
 
 trait ChartModule[F[_]] {
   this: Module[F] {type M[f[_]] <: MonadError[f, Throwable]} =>
@@ -34,7 +33,8 @@ trait ChartModule[F[_]] {
       }
     }(F)
 
-  private def addEntry(file: String, inputStream: InputStream, chartLevel: ChartLevel, map: Map[ChartLevel, Chart]): Map[ChartLevel, Chart] = {
+  private def addEntry(file: String, inputStream: InputStream, chartLevel: ChartLevel, map: Map[ChartLevel, Chart]):
+    Map[ChartLevel, Chart] = {
     Charts.getTemplateFileName(file) match {
       case Some(t) =>
         val data = ByteString.readFrom(inputStream)

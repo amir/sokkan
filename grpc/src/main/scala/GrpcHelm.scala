@@ -1,17 +1,16 @@
 package sokkan
 package grpc
 
+import cats.instances.future._
 import cats.~>
 import hapi.services.tiller.tiller.{ListReleasesResponse, ReleaseServiceGrpc, TestReleaseResponse}
-import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.grpc.{Channel, ManagedChannelBuilder, Metadata}
+import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.iteratee.modules.FutureModule
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import sokkan.SokkanOp._
 import sokkan.iteratee.chart.ChartModule
 import sokkan.iteratee.tar.NonSuspendableTapeArchiveModule
-import cats.instances.future._
-
-import scala.concurrent.{ExecutionContext, Future, Promise}
 
 final class GrpcHelmClient(
                             host: String,
@@ -30,11 +29,14 @@ final class GrpcHelmClient(
       stub
   }
 
-  trait FutureChartModule extends FutureModule with NonSuspendableTapeArchiveModule[Future] with ChartModule[Future]
-  def futureCharts(implicit ec0: ExecutionContext) = new FutureChartModule {
+  private trait FutureChartModule extends FutureModule
+    with NonSuspendableTapeArchiveModule[Future] with ChartModule[Future]
+
+  private def futureCharts(implicit ec0: ExecutionContext) = new FutureChartModule {
     override protected def ec: ExecutionContext = ec0
   }
 
+  // scalastyle:off method.length
   def apply[A](fa: ReleaseServiceA[A]): Future[A] =
     fa match {
       case GetVersion(req) =>
@@ -107,4 +109,5 @@ final class GrpcHelmClient(
 
 
     }
+  // scalastyle:on method.length
 }

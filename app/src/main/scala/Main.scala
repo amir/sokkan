@@ -1,25 +1,22 @@
-import java.net.URL
-
+import _root_.skuber.ConfigMap
+import _root_.skuber.json.format.configMapFmt
+import _root_.skuber.k8sInit
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cats.data.EitherK
 import cats.free.Free
-import _root_.skuber.ConfigMap
-import sokkan.ReleaseServiceA
-import sokkan.SokkanOp.ReleaseServiceI
-import sokkan.skuber.KubernetesOp
-import sokkan.skuber.KubernetesOp.KubernetesI
-import _root_.skuber.k8sInit
-import _root_.skuber.json.format.configMapFmt
-import cats.~>
-import sokkan.grpc.GrpcHelmClient
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import cats.instances.future._
+import cats.~>
 import hapi.chart.config.Config
 import hapi.services.tiller.tiller.{InstallReleaseRequest, UninstallReleaseRequest}
-
+import java.net.URL
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import sokkan.ReleaseServiceA
+import sokkan.SokkanOp.ReleaseServiceI
+import sokkan.grpc.GrpcHelmClient
+import sokkan.skuber.KubernetesOp
+import sokkan.skuber.KubernetesOp.KubernetesI
 
 object Main extends App {
   type App[A] = EitherK[ReleaseServiceA, KubernetesOp, A]
@@ -37,7 +34,8 @@ object Main extends App {
 
     for {
       chart <- chartFromTapeArchiveUrl(chartUrl)
-      _ <- install(InstallReleaseRequest(name = releaseName, values = Some(Config()), namespace = "default", chart = chart))
+      _ <- install(
+        InstallReleaseRequest(name = releaseName, values = Some(Config()), namespace = "default", chart = chart))
       cm <- get[ConfigMap](s"$releaseName-mariadb")
       _ <- uninstall(UninstallReleaseRequest(name = releaseName, purge = true))
     } yield cm
@@ -48,5 +46,7 @@ object Main extends App {
 
   val interpreter: App ~> Future = helm or kubernetes
 
+  // scalastyle:off
   program.foldMap(interpreter).onComplete(println)
+  // scalastyle:on
 }

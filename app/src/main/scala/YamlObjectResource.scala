@@ -1,5 +1,6 @@
 import com.google.protobuf.ByteString
-import net.jcazevedo.moultingyaml.{FlowStyle, LineBreak, ScalarStyle, YamlArray, YamlBoolean, YamlNull, YamlNumber, YamlObject, YamlString, YamlValue}
+import net.jcazevedo.moultingyaml.{FlowStyle, LineBreak, ScalarStyle}
+import net.jcazevedo.moultingyaml.{YamlArray, YamlBoolean, YamlNull, YamlNumber, YamlObject, YamlString, YamlValue}
 import play.api.libs.json._
 import skuber.ObjectResource
 
@@ -26,6 +27,7 @@ class YamlObjectResource[T <: ObjectResource](o: T)(implicit fmt: Format[T]) {
 }
 
 object YamlObjectResource {
-  implicit def objectToYaml[T <: ObjectResource](o: T)(implicit fmt: Format[T]) = new YamlObjectResource[T](o)
+  implicit def objectToYaml[T <: ObjectResource](o: T)(implicit fmt: Format[T]): YamlObjectResource[T] =
+    new YamlObjectResource[T](o)
 }
 

@@ -1,11 +1,9 @@
 package sokkan.iteratee.vfs
 
-import java.io.{Closeable, InputStream}
-
 import cats.MonadError
 import io.iteratee.Enumerator
+import java.io.{Closeable, InputStream}
 import org.apache.commons.vfs2.FileObject
-
 import scala.util.control.NonFatal
 
 trait VFSModule[F[_]] {

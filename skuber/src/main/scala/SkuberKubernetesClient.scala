@@ -1,9 +1,8 @@
-import sokkan.skuber.KubernetesOp
-import cats.~>
-import sokkan.skuber.KubernetesOp.{GetObjectResource, RestrictedFunctionK}
-
-import scala.concurrent.Future
 import _root_.skuber.{K8SRequestContext, ObjectResource}
+import cats.~>
+import scala.concurrent.Future
+import sokkan.skuber.KubernetesOp
+import sokkan.skuber.KubernetesOp.{GetObjectResource, RestrictedFunctionK}
 
 class SkuberKubernetesClient(client: K8SRequestContext) extends (KubernetesOp ~> Future) {
   def apply[A](fa: KubernetesOp[A]): Future[A] = {
