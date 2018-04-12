@@ -9,6 +9,7 @@ script:
   - sbt clean coverage test scalastyle coverageReport && sbt coverageAggregate
 
 before_cache:
+  - bash <(curl -s https://codecov.io/bash)
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm
   - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
