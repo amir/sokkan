@@ -7,6 +7,7 @@ libraryDependencies ++= Seq(
   "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
   "io.iteratee" %% "iteratee-core" % "0.17.0",
   "io.iteratee" %% "iteratee-files" % "0.17.0",
+  "io.circe" %% "circe-yaml" % "0.8.0",
   "io.circe" %% "circe-generic" % "0.9.3",
   "io.circe" %% "circe-generic-extras" % "0.9.3",
 
