@@ -9,7 +9,7 @@ Furthermore charts can have their dependencies—which are charts themselves—b
 
 Unfortunately, Tiller does not entirely encapsulate the logic of installing and updating chart releases and it’s its command-line component which processes a Helm chart’s requirements and decides what needs to be sent to Tiller.
 
-Each requirement of a chart, specified in `requirements.yaml`, may contain two optional fields:
+Each requirement of a chart, specified in `requirements.yaml`, may contain two [optional fields](https://docs.helm.sh/developing_charts/#tags-and-condition-fields-in-requirements-yaml):
 
  - `tags`
  - `condition`
